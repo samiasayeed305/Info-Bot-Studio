@@ -7,7 +7,7 @@ app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
 
 # ----------------------------- IBM Watson Config -----------------------------
-API_KEY = "yP5WQmNTzLgC_dWHsOnBQMH2r9ekTM2uw237J5AvsFWs"          # Replace with your API Key
+API_KEY = "et2erlTLLSh4Y-el2mRsJJhu4ytgJqj2cMT0kXNDZ7k4"          # Replace with your API Key
 SERVICE_URL = "https://api.au-syd.assistant.watson.cloud.ibm.com/instances/33fd5ad8-9b47-4897-bad7-8df517087d7f"  # Replace with your Service URL (e.g., https://api.au-syd.assistant.watson.cloud.ibm.com)
 ASSISTANT_ID = "49ac90f4-a470-4f41-941b-55c5c1eeed0c"  # Replace with your Assistant ID
 
