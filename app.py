@@ -1,30 +1,30 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
+from requests.auth import HTTPBasicAuth
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
 
-# -----------------------------
-# UPDATE THESE VARIABLES
-# -----------------------------
-API_KEY = "yP5WQmNTzLgC_dWHsOnBQMH2r9ekTM2uw237J5AvsFWs"                    # Copy your API Key from IBM Cloud
-SERVICE_URL = "https://api.au-syd.assistant.watson.cloud.ibm.com/instances/33fd5ad8-9b47-4897-bad7-8df517087d7f"   # Example: https://api.us-south.assistant.watson.cloud.ibm.com
-LIVE_ENV_ID = "31e141fd-6547-4e23-9a2b-54c23732da42"   # From Deploy → Live Environment ID
+# ----------------------------- IBM Watson Config -----------------------------
+API_KEY = "yP5WQmNTzLgC_dWHsOnBQMH2r9ekTM2uw237J5AvsFWs"
+SERVICE_URL = "https://api.au-syd.assistant.watson.cloud.ibm.com/instances/33fd5ad8-9b47-4897-bad7-8df517087d7f"
+ASSISTANT_ID = "31e141fd-6547-4e23-9a2b-54c23732da42"
 
-# Full endpoint for sending messages
-URL = f"{SERVICE_URL}/v2/assistants/{LIVE_ENV_ID}/message"
+URL = f"{SERVICE_URL}/v2/assistants/{ASSISTANT_ID}/message?version=2025-11-24"
 
-headers = {
-    "Content-Type": "application/json",
-    "Authorization": f"Bearer {API_KEY}"
-}
+# ----------------------------- Frontend Route -----------------------------
+@app.route('/')
+def index():
+    return send_from_directory('.', 'chatbot.html')  # Serve your HTML file
 
+# ----------------------------- Backend Route -----------------------------
 @app.route("/api/message", methods=["POST"])
 def message():
-    user_msg = request.json.get("message", "")
-    
-    # Prepare payload in new Watsonx format
+    user_msg = request.json.get("message", "").strip()
+    if not user_msg:
+        return jsonify({"reply": "Please type a message."})
+
     payload = {
         "input": {
             "message_type": "text",
@@ -33,16 +33,26 @@ def message():
     }
 
     try:
-        response = requests.post(URL, json=payload, headers=headers)
+        response = requests.post(
+            URL,
+            json=payload,
+            auth=HTTPBasicAuth('apikey', API_KEY)
+        )
+        response.raise_for_status()
         result = response.json()
-        # Extract reply safely
-        reply = result.get("output", [{}])[0].get("generic", [{}])[0].get("text", "No response")
+
+        # Extract all text messages from Watson response
+        generic_responses = result.get("output", {}).get("generic", [])
+        reply_texts = [g.get("text") for g in generic_responses if g.get("text")]
+        reply = "\n".join(reply_texts) if reply_texts else "No response from Watson."
+
+    except requests.exceptions.RequestException as e:
+        reply = f"Request error: {str(e)}"
     except Exception as e:
-        reply = f"Error: {str(e)}"
+        reply = f"Unexpected error: {str(e)}"
 
     return jsonify({"reply": reply})
 
-
+# ----------------------------- Run Flask -----------------------------
 if __name__ == "__main__":
-    # Run locally on port 5000
     app.run(host="0.0.0.0", port=5000, debug=True)

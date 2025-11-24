@@ -821,45 +821,44 @@
     }
 
     // ---------------------- Send / Backend ----------------------
-    function sendMessage(){
-      const text = chatInput.value.trim();
-      if(!text && attachments.length===0) return; 
-      if(awaitingResponse) return;
-      
-      addUserMessage(text, attachments);
-      
-      // reset
-      chatInput.value=''; 
-      chatInput.style.height='auto'; 
-      attachments=[]; 
-      attachmentsList.innerHTML='';
-      
-      // send to backend
-      showTyping(); 
-      awaitingResponse=true;
+    function sendMessage() {
+    const text = chatInput.value.trim();
+    if(!text && attachments.length===0) return; 
+    if(awaitingResponse) return;
 
-      fetch(FLASK_ENDPOINT, {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({message:text})
-      })
-        .then(async res=>{ 
-          if(!res.ok) throw new Error('Network error'); 
-          return res.json(); 
-        })
-        .then(data=>{
-          removeTyping(); 
-          awaitingResponse=false; 
-          const reply = data.reply || data.response || "I'm sorry, I didn't understand that.";
-          addBotMessage(Array.isArray(reply)? reply.join('\n') : reply);
-        })
-        .catch(err=>{ 
-          removeTyping(); 
-          awaitingResponse=false; 
-          addBotMessage('Sorry, something went wrong.'); 
-          console.error(err); 
-        });
-    }
+    addUserMessage(text, attachments);
+
+    // reset
+    chatInput.value=''; 
+    chatInput.style.height='auto'; 
+    attachments=[]; 
+    attachmentsList.innerHTML='';
+
+    // show typing
+    showTyping();
+    awaitingResponse = true;
+
+    // send to backend
+    fetch(FLASK_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text })
+    })
+    .then(res => res.json())
+    .then(data => {
+        removeTyping();
+        awaitingResponse = false;
+        const reply = data.reply || "I'm sorry, I didn't understand that.";
+        addBotMessage(Array.isArray(reply) ? reply.join('\n') : reply);
+    })
+    .catch(err => {
+        removeTyping();
+        awaitingResponse = false;
+        addBotMessage('Sorry, something went wrong.');
+        console.error(err);
+    });
+}
+
 
     // ---------------------- Files ----------------------
     function handleFileAttachment(file, icon){ 
@@ -1020,30 +1019,23 @@
     }
 
     // ---------------------- Save/load config ----------------------
-    function saveConfiguration(){ 
-      localStorage.setItem('watsonChatbotConfig', JSON.stringify({
-        voiceEnabled,
-        soundEnabled,
-        autoScroll,
-        typingEnabled
-      })); 
-    }
-    
-    function loadConfiguration(){ 
-      const s=localStorage.getItem('watsonChatbotConfig'); 
-      if(!s) return; 
-      const cfg=JSON.parse(s); 
-      voiceEnabled=!!cfg.voiceEnabled; 
-      soundEnabled=!!cfg.soundEnabled; 
-      autoScroll = cfg.autoScroll===undefined? true: !!cfg.autoScroll; 
-      typingEnabled = cfg.typingEnabled===undefined? true: !!cfg.typingEnabled; 
-      voiceToggle.classList.toggle('active', voiceEnabled); 
-      soundToggle.classList.toggle('active', soundEnabled); 
-      scrollToggle.classList.toggle('active', autoScroll); 
-      typingToggle.classList.toggle('active', typingEnabled); 
-      voiceIndicator.classList.toggle('active', voiceEnabled); 
-    }
+    function saveConfiguration() {
+    localStorage.setItem('watsonChatbotConfig', JSON.stringify({ voiceEnabled, soundEnabled, autoScroll, typingEnabled }));
+}
 
+function loadConfiguration() {
+    const s = localStorage.getItem('watsonChatbotConfig');
+    if (!s) return;
+    const cfg = JSON.parse(s);
+    voiceEnabled = !!cfg.voiceEnabled;
+    soundEnabled = !!cfg.soundEnabled;
+    autoScroll = cfg.autoScroll === undefined ? true : !!cfg.autoScroll;
+    typingEnabled = cfg.typingEnabled === undefined ? true : !!cfg.typingEnabled;
+    voiceToggle.classList.toggle('active', voiceEnabled);
+    soundToggle.classList.toggle('active', soundEnabled);
+    scrollToggle.classList.toggle('active', autoScroll);
+    typingToggle.classList.toggle('active', typingEnabled);
+}
     // Expose some funcs for inline onclick
     window.quickAction = quickAction;
     window.copyToClipboard = copyToClipboard;
