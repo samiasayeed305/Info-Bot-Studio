@@ -7,10 +7,11 @@ app = Flask(__name__, static_folder='.', template_folder='.')
 CORS(app)
 
 # ----------------------------- IBM Watson Config -----------------------------
-API_KEY = "yP5WQmNTzLgC_dWHsOnBQMH2r9ekTM2uw237J5AvsFWs"
-SERVICE_URL = "https://api.au-syd.assistant.watson.cloud.ibm.com/instances/33fd5ad8-9b47-4897-bad7-8df517087d7f"
-ASSISTANT_ID = "31e141fd-6547-4e23-9a2b-54c23732da42"
+API_KEY = "yP5WQmNTzLgC_dWHsOnBQMH2r9ekTM2uw237J5AvsFWs"          # Replace with your API Key
+SERVICE_URL = "https://api.au-syd.assistant.watson.cloud.ibm.com/instances/33fd5ad8-9b47-4897-bad7-8df517087d7f"  # Replace with your Service URL (e.g., https://api.au-syd.assistant.watson.cloud.ibm.com)
+ASSISTANT_ID = "49ac90f4-a470-4f41-941b-55c5c1eeed0c"  # Replace with your Assistant ID
 
+# Watson Assistant v2 API URL
 URL = f"{SERVICE_URL}/v2/assistants/{ASSISTANT_ID}/message?version=2025-11-24"
 
 # ----------------------------- Frontend Route -----------------------------
@@ -33,21 +34,27 @@ def message():
     }
 
     try:
+        # Send request to Watson Assistant with basic auth
         response = requests.post(
             URL,
             json=payload,
-            auth=HTTPBasicAuth('apikey', API_KEY)
+            auth=HTTPBasicAuth('apikey', API_KEY),
+            timeout=10
         )
         response.raise_for_status()
         result = response.json()
 
-        # Extract all text messages from Watson response
+        # Extract all text responses from Watson
         generic_responses = result.get("output", {}).get("generic", [])
         reply_texts = [g.get("text") for g in generic_responses if g.get("text")]
         reply = "\n".join(reply_texts) if reply_texts else "No response from Watson."
 
-    except requests.exceptions.RequestException as e:
-        reply = f"Request error: {str(e)}"
+    except requests.exceptions.HTTPError as e:
+        reply = f"HTTP error: {str(e)}"
+    except requests.exceptions.ConnectionError:
+        reply = "Connection error: Cannot reach Watson Assistant."
+    except requests.exceptions.Timeout:
+        reply = "Request timed out. Please try again."
     except Exception as e:
         reply = f"Unexpected error: {str(e)}"
 
