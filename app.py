@@ -9,9 +9,9 @@ CORS(app)
 # ---------------------------
 # ADD YOUR WATSON CREDENTIALS
 # ---------------------------
-API_KEY = "YOUR_API_KEY"
-ASSISTANT_ID = "YOUR_ASSISTANT_ID"
-URL = "YOUR_ASSISTANT_URL"
+API_KEY = "xrvJw9IqRSuM2ucbQ6ac2otoBwGFfmNlWmQ7omKhg0Tb"
+ASSISTANT_ID = "49ac90f4-a470-4f41-941b-55c5c1eeed0c"
+URL = "https://api.au-syd.assistant.watson.cloud.ibm.com/instances/33fd5ad8-9b47-4897-bad7-8df517087d7f"
 
 auth = IAMAuthenticator(API_KEY)
 assistant = AssistantV2(
